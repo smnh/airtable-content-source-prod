@@ -2,9 +2,9 @@ import Airtable from 'airtable';
 import Asset from '../interfaces/asset';
 import { AirtableClient, AssetRecordFields, StatefulRecord, StateFields } from './airtable-client';
 
-export function getLinkedRecordId(field?: Airtable.FieldSet[keyof Airtable.FieldSet]): string | undefined {
+export function getLinkedRecordId(field?: Airtable.FieldSet[keyof Airtable.FieldSet]): string | null {
     if (!Array.isArray(field) || field.length === 0) {
-        return;
+        return null;
     }
     // When a record references another record in 'changed' and 'published-has-changes' states,
     // the linked record field will have 2 IDs, but that's ok because 'getStatefulRecordById()'
@@ -12,7 +12,7 @@ export function getLinkedRecordId(field?: Airtable.FieldSet[keyof Airtable.Field
     // record in "non-preview" mode.
     const recordId = field[0];
     if (typeof recordId !== 'string') {
-        return;
+        return null;
     }
     return recordId;
 }
@@ -27,10 +27,10 @@ export async function getLinkedRecord<Fields extends StateFields>({
     field: Airtable.FieldSet[keyof Airtable.FieldSet] | undefined;
     airtableClient: AirtableClient;
     preview: boolean;
-}): Promise<StatefulRecord<Fields> | undefined> {
+}): Promise<StatefulRecord<Fields> | null> {
     const recordId = getLinkedRecordId(field);
     if (!recordId) {
-        return;
+        return null;
     }
     const record = await airtableClient.getStatefulRecordById<Fields>({
         tableId: tableName,
@@ -38,7 +38,7 @@ export async function getLinkedRecord<Fields extends StateFields>({
         preview: preview
     });
     if (!record) {
-        return;
+        return null;
     }
     return record;
 }
@@ -46,21 +46,21 @@ export async function getLinkedRecord<Fields extends StateFields>({
 export async function getLinkedAsset(
     field: Airtable.FieldSet[keyof Airtable.FieldSet] | undefined,
     airtableClient: AirtableClient
-): Promise<Asset | undefined> {
+): Promise<Asset | null> {
     const assetId = getLinkedRecordId(field);
     if (!assetId) {
-        return;
+        return null;
     }
     const asset = await airtableClient.getAirtableRecordById<AssetRecordFields>({
         tableId: 'Assets',
         recordId: assetId
     });
     if (!asset) {
-        return;
+        return null;
     }
     const attachment = asset.fields.Asset?.[0];
     if (!attachment || !attachment.url || !attachment.width || !attachment.height) {
-        return;
+        return null;
     }
     return {
         url: attachment.url,

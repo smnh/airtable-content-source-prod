@@ -57,7 +57,7 @@ export const getStaticProps = async () => {
                   name: authorRecord.fields.Name,
                   picture: await getLinkedAsset(authorRecord.fields.Picture, airtableClient)
               }
-            : undefined;
+            : null;
 
         allPosts.push({
             id: postRecord.id,

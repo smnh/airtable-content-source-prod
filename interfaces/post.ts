@@ -6,10 +6,10 @@ interface PostType {
     slug: string;
     title: string;
     date?: string;
-    coverImage?: Asset;
-    author?: Author;
+    coverImage?: Asset | null;
+    author?: Author | null;
     excerpt?: string;
-    ogImage?: Asset;
+    ogImage?: Asset | null;
     content?: string;
 }
 

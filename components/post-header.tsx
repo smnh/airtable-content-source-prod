@@ -7,9 +7,9 @@ import type Asset from '../interfaces/asset';
 
 type Props = {
     title: string;
-    coverImage?: Asset;
+    coverImage?: Asset | null;
     date?: string;
-    author?: Author;
+    author?: Author | null;
 };
 
 const PostHeader = ({ title, coverImage, date, author }: Props) => {
