@@ -13,22 +13,6 @@ export default defineStackbitConfig({
         })
     ],
 
-    // Extend and override models for project specific requirements.
-    modelExtensions: [
-        // Change the Posts model to page to enable page creation feature.
-        // Override Airtable's plural table names with singular name.
-        {
-            type: 'page',
-            name: 'Posts',
-            urlPath: '/posts/{slug}',
-            label: 'Post'
-        },
-        {
-            name: 'Authors',
-            label: 'Author'
-        }
-    ],
-
     mapModels: ({ models }) => {
         return models.map((model) => {
             if (model.label === 'Posts') {
