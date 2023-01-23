@@ -20,6 +20,7 @@ export default defineStackbitConfig({
         {
             type: 'page',
             name: 'Posts',
+            urlPath: '/posts/{slug}',
             label: 'Post'
         },
         {
@@ -28,9 +29,28 @@ export default defineStackbitConfig({
         }
     ],
 
+    mapModels: ({ models }) => {
+        return models.map((model) => {
+            if (model.label === 'Posts') {
+                model = {
+                    ...model,
+                    type: 'page',
+                    label: 'Post',
+                    urlPath: '/posts/{slug}'
+                };
+            } else if (model.label === 'Authors') {
+                model = {
+                    ...model,
+                    label: 'Author'
+                };
+            }
+            return model;
+        });
+    },
+
     // Generate a sitemap to enable quick page navigation in Stackbit.
     siteMap: ({ documents, models }) => {
-        const postsTableId = models.find((model) => model.label === 'Posts')?.name;
+        const postsTableId = models.find((model) => model.label === 'Post')?.name;
         return [
             // The homepage is not represented by any record, define a static SiteMapEntry
             {
