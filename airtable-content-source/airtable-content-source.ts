@@ -47,9 +47,10 @@ export class AirtableContentSource implements ContentSourceInterface<UserContext
     private logger!: Logger;
     private userLogger!: Logger;
     private airtableClient!: AirtableClient;
-    private onContentChange: null | ((contentChangeEvent: ContentChangeEvent<DocumentContext, AssetContext>) => void) = null;
+    private onContentChange: undefined | ((contentChangeEvent: ContentChangeEvent<DocumentContext, AssetContext>) => void);
     private assetsTableName: string;
-    private assetsTableId: string | undefined;
+    private assetsTableId: undefined | string;
+    private getModelMap: undefined | (() => ModelMap);
 
     constructor({ personalAccessToken, baseId, assetsTableName }: ContentSourceOptions) {
         if (!personalAccessToken) {
@@ -209,6 +210,7 @@ export class AirtableContentSource implements ContentSourceInterface<UserContext
         onContentChange: (contentChangeEvent: ContentChangeEvent<DocumentContext, AssetContext>) => Promise<void>;
         onSchemaChange: () => void;
     }): void {
+        this.getModelMap = options.getModelMap;
         this.onContentChange = options.onContentChange;
     }
 
@@ -221,7 +223,7 @@ export class AirtableContentSource implements ContentSourceInterface<UserContext
      * `startWatchingContentUpdates()` method is called again.
      */
     stopWatchingContentUpdates(): void {
-        this.onContentChange = null;
+        this.onContentChange = undefined;
     }
 
     /**
@@ -493,13 +495,26 @@ export class AirtableContentSource implements ContentSourceInterface<UserContext
      * underlying content source.
      */
     async publishDocuments(options: { documents: Document<DocumentContext>[]; assets: Asset<unknown>[]; userContext?: UserContext }): Promise<void> {
-        await this.airtableClient.publishRecords({
+        const publishResult = await this.airtableClient.publishRecords({
             recordsMeta: options.documents.map((document) => {
                 return {
                     tableId: document.modelName,
                     recordId: document.id
                 };
             })
+        });
+
+        const modelMap = this.getModelMap?.();
+        if (!modelMap) {
+            return;
+        }
+
+        // Call onContentChange callback to let Stackbit know that the content was updated.
+        this.onContentChange?.({
+            documents: convertAirtableRecordsToStackbitDocuments(publishResult.publishedRecords, modelMap, this.manageUrl),
+            assets: [],
+            deletedDocumentIds: publishResult.deletedRecordsIds,
+            deletedAssetIds: []
         });
     }
 }

@@ -25,6 +25,8 @@ For example, assume you have updated a blog post that you aren't ready to publis
 
 To introduce content publishing capabilities to Airtable and allow Stackbit to leverage them, the **Posts** and the **Authors** tables have been extended with two additional fields - `State` and `Related`. The State field is a [Single select field](https://support.airtable.com/docs/single-select-field) that can have one of the six following states:
 
+![Airtable State Field](./readme-images/airtable-state-field.png)
+
 - `draft` - a record that has never been published. A "production" site will never show records in this state, but a site running in the "preview" mode will show these records.
 - `published` - a record that has been published and has no pending changes. Sites running in both the "production" and the "preview" environments will show `published` records. Records must not be mutated in this state as they represent "production" data.
 - `published-has-changes` - a published record that has pending changes. A record in this state contains the data in its last published form. In this state, the `Related` field will reference the record in the `changed` state. Records must not be mutated in this state as they represent "production" data. Any content updates must be applied to the linked record. A "production" site will use the data from this record.

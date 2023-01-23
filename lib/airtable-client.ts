@@ -425,7 +425,13 @@ export class AirtableClient {
         );
     }
 
-    async publishRecords({ recordsMeta }: { recordsMeta: { tableId: string; recordId: string }[] }) {
+    async publishRecords({
+        recordsMeta
+    }: {
+        recordsMeta: { tableId: string; recordId: string }[];
+    }): Promise<{ publishedRecords: StatefulRecord<StateFields>[]; deletedRecordsIds: string[] }> {
+        const publishedRecords: StatefulRecord<StateFields>[] = [];
+        const deletedRecordsIds: string[] = [];
         for (const recordMeta of recordsMeta) {
             const record = await this.getStatefulRecordById({
                 tableId: recordMeta.tableId,
@@ -437,22 +443,29 @@ export class AirtableClient {
                 throw new Error(`record in table '${recordMeta.tableId}' with id '${recordMeta.tableId}' was not found`);
             }
             if (record.status === 'draft') {
-                await this.base(record.tableId).update(record.id, { State: 'published' });
+                const publishedRecord = await this.base<StateFields>(record.tableId).update(record.id, { State: 'published' });
+                publishedRecords.push(convertAirtableRecordToStatefulRecord(publishedRecord, recordMeta.tableId));
             } else if (record.status === 'changed') {
-                await this.base(record.tableId).update(record.id, {
+                const publishedRecord = await this.base<StateFields>(record.tableId).update(record.id, {
                     ...record.fields,
                     State: 'published',
                     Related: []
                 });
+                publishedRecords.push(convertAirtableRecordToStatefulRecord(publishedRecord, recordMeta.tableId));
                 await this.base(record.tableId).destroy(record.changedRecordId);
             } else if (record.status === 'published-to-be-deleted') {
                 await this.base(record.tableId).update(record.id, { State: 'deleted' });
+                deletedRecordsIds.push(record.id);
             } else {
                 throw new Error(
                     `publishing records in '${record.status}' status is not allowed, records can only be published in 'draft', 'published' and 'published-to-be-deleted' statuses`
                 );
             }
         }
+        return {
+            publishedRecords,
+            deletedRecordsIds
+        };
     }
 }
 
