@@ -446,7 +446,7 @@ export class AirtableClient {
                 const publishedRecord = await this.base<StateFields>(record.tableId).update(record.id, { State: 'published' });
                 publishedRecords.push(convertAirtableRecordToStatefulRecord(publishedRecord, recordMeta.tableId));
             } else if (record.status === 'changed') {
-                const publishedRecord = await this.base<StateFields>(record.tableId).update(record.id, {
+                const publishedRecord = await this.base<StateFields>(record.tableId).replace(record.id, {
                     ...record.fields,
                     State: 'published',
                     Related: []
